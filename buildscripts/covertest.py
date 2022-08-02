@@ -93,7 +93,7 @@ class CoverageRunner(object):
         items = ("coverage", "txt")
         if self.buildtags:
             items = ("coverage", self.buildtags.replace(",", ".").replace(" ", ""), "txt")
-        return os.path.join(pkg.replace(self.base_pkg + "/", ""), ".".join(items))
+        return os.path.join(pkg.replace(f"{self.base_pkg}/", ""), ".".join(items))
 
     def get_pkg_recursive_deps(self, pkg):
         """
@@ -152,8 +152,9 @@ class CoverageRunner(object):
         """
         extras = []
         for key, rec_deps in self.recursive_pkg_deps.items():
-            any = self.test_imports.get(key, set()).difference(rec_deps, set([key]))
-            if any:
+            if any := self.test_imports.get(key, set()).difference(
+                rec_deps, {key}
+            ):
                 extras.append((key, any))
 
         if extras:

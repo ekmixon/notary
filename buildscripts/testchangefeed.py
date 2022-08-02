@@ -129,7 +129,7 @@ class Client(object):
                 communicate_input = (stdinput + "\n",) + communicate_input
             else:
                 communicate_input = (stdinput,)
-        
+
         _, filename = mkstemp()
         with open(filename, 'wb') as tempfile:
             process = Popen(command, env=self.env, stdout=tempfile, stdin=PIPE,
@@ -153,25 +153,32 @@ class Client(object):
         # blackout for rethinkdb
         sleep(60)
         if gun is not None:
-            token_url = "{}/auth/token?realm=dtr&service=dtr&scope=repository:{}:pull".format(self.notary_server, gun)
-            changefeed_url = "{}/v2/{}/_trust/changefeed".format(self.notary_server, gun)
+            token_url = f"{self.notary_server}/auth/token?realm=dtr&service=dtr&scope=repository:{gun}:pull"
+
+            changefeed_url = f"{self.notary_server}/v2/{gun}/_trust/changefeed"
         else:
-            token_url = "{}/auth/token?service=dtr&scope=registry:catalog:*".format(self.notary_server)
-            changefeed_url = "{}/v2/_trust/changefeed".format(self.notary_server)
-        
+            token_url = f"{self.notary_server}/auth/token?service=dtr&scope=registry:catalog:*"
+
+            changefeed_url = f"{self.notary_server}/v2/_trust/changefeed"
+
         query = []
         if start is not None:
-            query.append("change_id="+str(start))
+            query.append(f"change_id={str(start)}")
 
         if pagesize is not None:
-            query.append("records="+str(pagesize))
+            query.append(f"records={str(pagesize)}")
 
-        changefeed_url = changefeed_url + "?" + "&".join(query)
+        changefeed_url = f"{changefeed_url}?" + "&".join(query)
 
         resp = requests.get(token_url, auth=HTTPBasicAuth(self.username_passwd[0], self.username_passwd[1]), verify=False)
         token = resp.json()["token"]
-        
-        resp = requests.get(changefeed_url, headers={"Authorization": "Bearer " + token}, verify=False)
+
+        resp = requests.get(
+            changefeed_url,
+            headers={"Authorization": f"Bearer {token}"},
+            verify=False,
+        )
+
         return resp.json()
 
 class Tester(object):
@@ -394,7 +401,7 @@ def get_dtr_ca(server):
     returning the filename. This function will close the file before returning
     to ensure Notary can open it when invoked.
     """
-    dtr_ca_url = server + "/ca"
+    dtr_ca_url = f"{server}/ca"
     print("Getting DTR ca cert from URL:", dtr_ca_url)
     resp = requests.get(dtr_ca_url, verify=False)
     if resp.status_code != 200:

@@ -148,7 +148,7 @@ def verify_notary():
     Check that notary is the right version
     """
     if not os.path.isfile(NOTARY_BINARY):
-        raise Exception("notary client does not exist: " + NOTARY_BINARY)
+        raise Exception(f"notary client does not exist: {NOTARY_BINARY}")
 
     output = subprocess.check_output([NOTARY_BINARY, "version"]).strip()
     lines = output.split("\n")
@@ -158,7 +158,7 @@ def verify_notary():
 
     if lines[1].split()[-1] > NOTARY_VERSION:
         print(output)
-        raise Exception("notary version too high: must be <= " + NOTARY_VERSION)
+        raise Exception(f"notary version too high: must be <= {NOTARY_VERSION}")
 
 
 def setup():
@@ -265,7 +265,7 @@ def run_cmd(cmd, fileoutput, input=None):
     """
     Takes a string command, runs it, and returns the output even if it fails.
     """
-    print("$ " + cmd)
+    print(f"$ {cmd}")
     fileoutput.write("$ {cmd}\n".format(cmd=cmd))
 
     if input is not None:
@@ -372,9 +372,7 @@ def get_notary_usernamepass():
     username = os.getenv("NOTARY_SERVER_USERNAME")
     passwd = os.getenv("NOTARY_SERVER_PASSPHRASE")
 
-    if username and passwd:
-        return username + "\n" + passwd + "\n"
-    return None
+    return username + "\n" + passwd + "\n" if username and passwd else None
 
 
 def notary_list(fout, repo):
@@ -511,7 +509,7 @@ def test_docker_version(docker_version, repo_name="", do_after_first_push=None):
 
     # push again if we did something after the first push
     if do_after_first_push:
-        tag = docker_version + "_push_again"
+        tag = f"{docker_version}_push_again"
         result[tag] = test_push(
             tempdir, docker_version, image, tag=tag,
             # 1.8.x and 1.9.x might fail to push again after snapshot rotation
@@ -531,10 +529,11 @@ def test_docker_version(docker_version, repo_name="", do_after_first_push=None):
             result[ver] = test_push(tempdir, ver, image, allow_push_failure=can_fail)
 
     # find all the successfully pushed tags
-    expected_tags = {}
-    for ver in result:
-        if isinstance(result[ver]["push"], dict):
-            expected_tags[ver] = result[ver]["push"]
+    expected_tags = {
+        ver: result[ver]["push"]
+        for ver in result
+        if isinstance(result[ver]["push"], dict)
+    }
 
     with open(os.path.join(tempdir, "pull_a"), 'wb') as fout:
         for ver in DOCKERS:
@@ -618,7 +617,7 @@ def test_all_docker_versions():
         print("\nRepo created with docker {0} and snapshot key rotated:"
               .format(docker_version))
         print(json.dumps(result, indent=2))
-        results[docker_version + "_snapshot_rotation"] = result
+        results[f"{docker_version}_snapshot_rotation"] = result
 
     with open(os.path.join(_TEMPDIR, "total_results.json"), 'wb') as fout:
         json.dump(results, fout, indent=2)

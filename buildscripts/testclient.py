@@ -314,8 +314,13 @@ def wait_for_server(server, timeout_in_seconds):
     command = ["curl", server]
     if server is None:
         server = "https://notary-server:4443"
-        command = ["curl", "--cacert", os.path.join(reporoot(), "fixtures", "root-ca.crt"),
-                   server + "/_notary_server/health"]
+        command = [
+            "curl",
+            "--cacert",
+            os.path.join(reporoot(), "fixtures", "root-ca.crt"),
+            f"{server}/_notary_server/health",
+        ]
+
 
     start = time()
     succeeded = 0
